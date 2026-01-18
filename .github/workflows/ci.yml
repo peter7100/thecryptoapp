@@ -37,14 +37,17 @@ jobs:
       - name: Build classes for OpenJML
         run: mvn -q -DskipTests compile
 
-      - name: Download OpenJML JAR
+      - name: Download and Setup OpenJML
         run: |
-          wget https://github.com/OpenJML/OpenJML/releases/download/21-0.19/openjml.jar -O openjml.jar
-          java -jar openjml.jar -version
+          wget https://github.com/OpenJML/OpenJML/releases/download/21-0.19/openjml-ubuntu-22.04-21-0.19.zip -O OpenJML.zip
+          unzip OpenJML.zip
+          find . -name "openjml" -type f -executable | head -1 | xargs -I {} ln -sf {} ./openjml
+          chmod +x ./openjml
+          ./openjml -version
 
       - name: Run OpenJML ESC
         run: |
-          java -jar openjml.jar --esc \
+          ./openjml --esc \
             -classpath target/classes \
             -sourcepath src/main/java \
             --method encrypt,decrypt,process \
