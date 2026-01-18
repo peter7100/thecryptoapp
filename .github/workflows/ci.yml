@@ -1,4 +1,4 @@
-name: Java CI
+name: Java CI with OpenJML
 
 on:
   push:
@@ -38,18 +38,19 @@ jobs:
       - name: Build classes for OpenJML
         run: mvn -q -DskipTests compile
 
-      - name: Download OpenJML
+      - name: Download and Prepare OpenJML
         run: |
           wget https://github.com/OpenJML/OpenJML/releases/download/21-0.19/openjml-ubuntu-22.04-21-0.19.zip -O OpenJML.zip
           unzip OpenJML.zip
-          mv openjml-ubuntu-22.04-21-0.19 OpenJML
+          # Dynamically get the top-level folder name
+          folder=$(unzip -Z -1 OpenJML.zip | head -1 | cut -d/ -f1)
+          mv "$folder" OpenJML
+          chmod +x OpenJML/bin/openjml
+          ./OpenJML/bin/openjml --version
 
       - name: Run OpenJML ESC
         run: |
-          chmod +x OpenJML/bin/openjml
-          ./OpenJML/bin/openjml --version
           ./OpenJML/bin/openjml --esc \
             -classpath target/classes \
+            --method encrypt,decrypt,process \
             src/main/java/com/example/crypto/FileCryptoApp.java
-
-        
