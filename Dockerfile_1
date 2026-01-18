@@ -1,0 +1,11 @@
+# Use an official Eclipse Temurin JDK image
+FROM eclipse-temurin:21-jdk
+
+# Set working directory inside container
+WORKDIR /app
+
+# Copy the compiled JAR (must be built before)
+COPY target/crypto-app-1.0-SNAPSHOT.jar app.jar
+
+# Default command to run the app
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
