@@ -41,19 +41,24 @@ jobs:
         run: |
           wget https://github.com/OpenJML/OpenJML/releases/download/21-0.19/openjml-ubuntu-22.04-21-0.19.zip -O OpenJML.zip
           unzip OpenJML.zip
-          # Handle exact folder structure from your original error
+          
+          # Handle existing openjml file - rename to openjml1
+          [ -f "./openjml" ] && mv ./openjml ./openjml1
+          
+          # Copy fresh OpenJML executable (handles all path cases)
           if [ -f "openjml-ubuntu-22.04-21-0.19/bin/openjml" ]; then
             cp openjml-ubuntu-22.04-21-0.19/bin/openjml ./openjml
           else
             find . -name "openjml" -type f | head -1 | xargs cp {} ./openjml
           fi
+          
           chmod +x ./openjml
-          ls -la ./openjml
+          ls -la ./openjml*
           ./openjml -version
 
       - name: Run OpenJML ESC
         run: |
-          openjml --esc \
+          ./openjml --esc \
             -classpath target/classes \
             -sourcepath src/main/java \
             --method encrypt,decrypt,process \
