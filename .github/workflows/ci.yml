@@ -53,7 +53,7 @@ jobs:
 
       - name: Run OpenJML ESC
         run: |
-          ./openjml --esc \
+          openjml --esc \
             -classpath target/classes \
             -sourcepath src/main/java \
             --method encrypt,decrypt,process \
