@@ -7,7 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +24,6 @@ jobs:
     name: OpenJML Verification (Non-blocking)
     runs-on: ubuntu-latest
     continue-on-error: true
-
     steps:
       - uses: actions/checkout@v4
 
@@ -34,23 +32,20 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: maven
 
       - name: Build classes for OpenJML
         run: mvn -q -DskipTests compile
 
-      - name: Download and Prepare OpenJML
+      - name: Download OpenJML JAR
         run: |
-          wget https://github.com/OpenJML/OpenJML/releases/download/21-0.19/openjml-ubuntu-22.04-21-0.19.zip -O OpenJML.zip
-          unzip OpenJML.zip
-          # Dynamically get the top-level folder name
-          folder=$(unzip -Z -1 OpenJML.zip | head -1 | cut -d/ -f1)
-          mv "$folder" OpenJML
-          chmod +x OpenJML/bin/openjml
-          ./OpenJML/bin/openjml --version
+          wget https://github.com/OpenJML/OpenJML/releases/download/21-0.19/openjml.jar -O openjml.jar
+          java -jar openjml.jar -version
 
       - name: Run OpenJML ESC
         run: |
-          ./OpenJML/bin/openjml --esc \
+          java -jar openjml.jar --esc \
             -classpath target/classes \
+            -sourcepath src/main/java \
             --method encrypt,decrypt,process \
             src/main/java/com/example/crypto/FileCryptoApp.java
