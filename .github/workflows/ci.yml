@@ -41,8 +41,14 @@ jobs:
         run: |
           wget https://github.com/OpenJML/OpenJML/releases/download/21-0.19/openjml-ubuntu-22.04-21-0.19.zip -O OpenJML.zip
           unzip OpenJML.zip
-          find . -name "openjml" -type f -executable | head -1 | xargs -I {} ln -sf {} ./openjml
+          # Handle exact folder structure from your original error
+          if [ -f "openjml-ubuntu-22.04-21-0.19/bin/openjml" ]; then
+            cp openjml-ubuntu-22.04-21-0.19/bin/openjml ./openjml
+          else
+            find . -name "openjml" -type f | head -1 | xargs cp {} ./openjml
+          fi
           chmod +x ./openjml
+          ls -la ./openjml
           ./openjml -version
 
       - name: Run OpenJML ESC
