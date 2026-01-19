@@ -1,45 +1,47 @@
 name: Docker Build & Push
 
 on:
-  workflow_run:
-    workflows: ["Build & Test"]
-    types: [completed]
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger only ✅
+  # Remove workflow_run - causes artifact issues
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     name: Build & Push Docker Image
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-    # 1️⃣ Checkout repository
+    # 1️⃣ Checkout code
     - name: Checkout code
       uses: actions/checkout@v5
 
-    # 2️⃣ Set up Docker Buildx
+    # 2️⃣ Set up JDK (build JAR directly)
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    # 3️⃣ Build JAR (no artifact dependency)
+    - name: Build JAR
+      run: mvn clean package -DskipTests
+
+    # 4️⃣ Set up Docker Buildx
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    # 3️⃣ Log in to Docker Hub ✅ FIXED: Both secrets
+    # 5️⃣ Log in to Docker Hub
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
-        username: ${{ vars.DOCKER_USERNAME }}      # ← Both secrets
+        username: ${{ vars.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # 4️⃣ Download JAR artifact ✅ FIXED: Correct path
-    - name: Download JAR artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: crypto-app-jar
-        path: target/  # ← Matches Dockerfile COPY target/*.jar
-
-    # 5️⃣ List files (debug)
-    - name: List downloaded files
+    # 6️⃣ Debug: List target files
+    - name: List JAR files
       run: ls -la target/
 
-    # 6️⃣ Build & Push ✅ Multiple tags
+    # 7️⃣ Build & Push
     - name: Build and push Docker image
       uses: docker/build-push-action@v6
       with:
