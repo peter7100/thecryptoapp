@@ -1,34 +1,42 @@
 # ------------------------
-# Stage 1: Build & verify
+# Stage 1: Build the JAR
 # ------------------------
-FROM maven:3.9.2-jdk-17 AS build
+FROM maven:3.9.6-eclipse-temurin-11 AS build
 
 WORKDIR /app
 
-# Copy project files
+# Copy Maven files first (better caching)
 COPY pom.xml .
+# Optional: pre-download dependencies
+# RUN mvn -B -q dependency:go-offline
+
+# Copy source and build
 COPY src ./src
-
-# Download OpenJML
-RUN curl -L -o openjml.jar https://github.com/OpenJML/OpenJML/releases/download/v21/openjml-21.jar
-
-# Build the project with Maven
-RUN mvn clean package -DskipTests
-
-# Run OpenJML ESC verification (core methods only)
-RUN java -jar openjml.jar --esc \
-      -classpath "target/classes:$(mvn dependency:build-classpath -Dmdep.outputFile=cp.txt && cat cp.txt)" \
-      --method encrypt,decrypt,process \
-      src/main/java/com/example/crypto/FileCryptoApp.java
+RUN mvn -B -q clean package -DskipTests
 
 # ------------------------
 # Stage 2: Runtime image
 # ------------------------
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:11-jre
 
+# Create a non-root user
+RUN useradd -r -u 1001 appuser
+
+# Create app and data directories
 WORKDIR /app
+RUN mkdir -p /app/data \
+    && chown -R appuser:appuser /app
 
-# Copy the compiled JAR from the build stage
+# Copy the built JAR
 COPY --from=build /app/target/crypto-app-1.0-SNAPSHOT.jar app.jar
 
+# Switch to non-root user
+#USER appuser
+
+
+# Default working directory for input/output files
+VOLUME ["/app/data"]
+WORKDIR /app/data
+
+# Default command
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

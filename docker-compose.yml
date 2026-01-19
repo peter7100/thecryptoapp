@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  crypto-app:
+    build: .
+    container_name: crypto-app
+    volumes:
+      - ./data:/app/data         # Local folder for input/output files
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - INPUT_FILE=input.txt     # Default input file inside /app/data
+      - ENCRYPTED_FILE=encrypted.dat
+      - DECRYPTED_FILE=decrypted.txt
+    command: >
+      sh -c "java $JAVA_OPTS -jar /app/app.jar /app/data/$INPUT_FILE /app/data/$ENCRYPTED_FILE /app/data/$DECRYPTED_FILE"
+    restart: unless-stopped
