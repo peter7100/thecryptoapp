@@ -1,53 +1,36 @@
-name: Docker Build & Push
+# .github/workflows/crypto-app.yml
+name: Crypto App CI/CD
 
 on:
-  workflow_dispatch:  # Manual trigger only ✅
-  # Remove workflow_run - causes artifact issues
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  docker:
+  build-test-docker:
     runs-on: ubuntu-latest
-    name: Build & Push Docker Image
-
+    
     steps:
-    # 1️⃣ Checkout code
-    - name: Checkout code
-      uses: actions/checkout@v5
-
-    # 2️⃣ Set up JDK (build JAR directly)
+    - uses: actions/checkout@v5
+    
     - name: Set up JDK 11
       uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'temurin'
         cache: 'maven'
-
-    # 3️⃣ Build JAR (no artifact dependency)
-    - name: Build JAR
+    
+    - name: Build & Test
       run: mvn clean package -DskipTests
-
-    # 4️⃣ Set up Docker Buildx
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    # 5️⃣ Log in to Docker Hub
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ vars.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    # 6️⃣ Debug: List target files
-    - name: List JAR files
-      run: ls -la target/
-
-    # 7️⃣ Build & Push
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        file: Dockerfile
-        push: true
-        tags: |
-          ${{ vars.DOCKER_USERNAME }}/crypto-app:latest
-          ${{ vars.DOCKER_USERNAME }}/crypto-app:1.0
+    
+    - name: Build & Push Docker (main only)
+      if: github.ref == 'refs/heads/main'
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      run: |
+        docker login -u $DOCKER_USERNAME -p $DOCKERHUB_TOKEN
+        docker build -t $DOCKER_USERNAME/crypto-app:latest -t $DOCKER_USERNAME/crypto-app:1.0 .
+        docker push $DOCKER_USERNAME/crypto-app:latest
+        docker push $DOCKER_USERNAME/crypto-app:1.0
