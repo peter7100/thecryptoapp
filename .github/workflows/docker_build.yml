@@ -26,7 +26,7 @@ jobs:
       uses: docker/login-action@v3
       with:
         username: ${{ vars.DOCKER_USERNAME }}      # ← Both secrets
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
     # 4️⃣ Download JAR artifact ✅ FIXED: Correct path
     - name: Download JAR artifact
@@ -48,4 +48,4 @@ jobs:
         push: true
         tags: |
           ${{ vars.DOCKER_USERNAME }}/crypto-app:latest
-          ${{ secrets.DOCKER_USERNAME }}/crypto-app:1.0
+          ${{ vars.DOCKER_USERNAME }}/crypto-app:1.0
