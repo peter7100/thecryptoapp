@@ -50,4 +50,4 @@ jobs:
         push: true
         tags: |
           ${{ vars.DOCKER_USERNAME }}/crypto-app:latest
-          ${{ vars.DOCKER_USERNAME }}/crypto-app:1.0
+          ${{ vars.DOCKER_USERNAME }}/crypto-app:5.0
